@@ -1,0 +1,10 @@
+description = "Tiny base image (Ubuntu Jammy Jellyfish build image, distroless-like run image) with no buildpacks included. To use, specify buildpacks at build time."
+
+[lifecycle]
+  version = "0.14.1"
+
+[stack]
+  build-image = "docker.io/paketobuildpacks/build-jammy-tiny:0.0.3"
+  id = "io.buildpacks.stacks.jammy.tiny"
+  run-image = "index.docker.io/paketobuildpacks/run-jammy-tiny:latest"
+  run-image-mirrors = []

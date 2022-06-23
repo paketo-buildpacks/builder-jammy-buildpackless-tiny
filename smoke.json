@@ -1,0 +1,3 @@
+{
+  "procfile" :  "docker://gcr.io/paketo-buildpacks/procfile"
+}
