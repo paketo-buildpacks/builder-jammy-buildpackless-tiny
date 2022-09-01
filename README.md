@@ -1,4 +1,4 @@
-# Paketo Buildpack for Jammyless Tiny Builder
+# Paketo Jammy Buildpackless Tiny Builder
 
 ## `paketobuildpacks/builder-jammy-buildpackless-tiny`
 
