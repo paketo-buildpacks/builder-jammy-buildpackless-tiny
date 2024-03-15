@@ -22,6 +22,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    # TODO: Should we test on multiple architectures?
+    - name: Run Smoke Tests
+      run: ./scripts/smoke.sh --name builder --skip-cleanup
+
     - name: Get pack version
       id: pack-version
       run: |
@@ -33,13 +37,10 @@ jobs:
       with:
         pack-version: ${{ steps.pack-version.outputs.version }}
 
-    - name: Run Smoke Tests
-      run: ./scripts/smoke.sh --name builder
-
     - name: Generate Release Notes
       id: notes
       run: |
-        notes="$(pack inspect-builder builder | grep -v 'Inspecting builder' \
+        notes="$(pack inspect-builder localhost:5000/builder | grep -v 'Inspecting builder' \
           | grep -v 'REMOTE:' \
           | grep -v 'LOCAL:' \
           | grep -v '\(not present\)' \

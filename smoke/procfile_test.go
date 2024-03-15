@@ -9,6 +9,8 @@ import (
 	"github.com/paketo-buildpacks/occam"
 	"github.com/sclevine/spec"
 
+	"runtime"
+
 	. "github.com/onsi/gomega"
 	. "github.com/paketo-buildpacks/occam/matchers"
 )
@@ -20,11 +22,13 @@ func testProcfile(t *testing.T, context spec.G, it spec.S) {
 
 		pack   occam.Pack
 		docker occam.Docker
+		arch   string
 	)
 
 	it.Before(func() {
 		pack = occam.NewPack().WithVerbose().WithNoColor()
 		docker = occam.NewDocker()
+		arch = runtime.GOARCH
 	})
 
 	context("procfile buildpack specified at build time", func() {
@@ -32,14 +36,23 @@ func testProcfile(t *testing.T, context spec.G, it spec.S) {
 			image     occam.Image
 			container occam.Container
 
-			name   string
-			source string
+			name    string
+			source  string
+			process string
 		)
 
 		it.Before(func() {
 			var err error
 			name, err = occam.RandomName()
 			Expect(err).NotTo(HaveOccurred())
+
+			if arch == "amd64" {
+				fmt.Println("Running on AMD64 architecture")
+				process = "amd64-process"
+			} else if arch == "arm64" {
+				fmt.Println("Running on ARM64 architecture")
+				process = "arm64-process"
+			}
 		})
 
 		it.After(func() {
@@ -60,6 +73,7 @@ func testProcfile(t *testing.T, context spec.G, it spec.S) {
 				WithBuildpacks(
 					config.Procfile,
 				).
+				WithAdditionalBuildArgs("--default-process", process).
 				Execute(name, source)
 			Expect(err).ToNot(HaveOccurred(), logs.String)
 

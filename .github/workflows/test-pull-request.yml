@@ -6,10 +6,13 @@ on:
     - main
 
 jobs:
-
   smoke:
     name: Smoke Test
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ ubuntu-22.04, buildjet-4vcpu-ubuntu-2204-arm ]
+
     steps:
     - name: Setup Go
       uses: actions/setup-go@v3
@@ -19,8 +22,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    # TODO: once an official `pack` release is out with multi-arch support, we probably don't need to run with the token
     - name: Run Smoke Tests
-      run: ./scripts/smoke.sh
+      run: ./scripts/smoke.sh -t ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
 
   upload:
     name: Upload Workflow Event Payload

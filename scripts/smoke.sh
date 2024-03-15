@@ -5,6 +5,7 @@ set -o pipefail
 
 readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly BUILDERDIR="$(cd "${PROGDIR}/.." && pwd)"
+readonly LOCAL_REGISTRY_NAME="builder_test_registry"
 
 # shellcheck source=SCRIPTDIR/.util/tools.sh
 source "${PROGDIR}/.util/tools.sh"
@@ -13,8 +14,9 @@ source "${PROGDIR}/.util/tools.sh"
 source "${PROGDIR}/.util/print.sh"
 
 function main() {
-  local name token
+  local name token skip_cleanup
   token=""
+  skip_cleanup=false
 
   while [[ "${#}" != 0 ]]; do
     case "${1}" in
@@ -32,6 +34,11 @@ function main() {
       --token|-t)
         token="${2}"
         shift 2
+        ;;
+
+      --skip-cleanup)
+        skip_cleanup=true
+        shift 1
         ;;
 
       "")
@@ -52,11 +59,19 @@ function main() {
     name="testbuilder"
   fi
 
-  tools::install "${token}"
+  # Build the builder
+  "${PROGDIR}/build.sh" --token "${token}" --name "${name}"
 
-  builder::create "${name}"
+  container_id=$(docker ps -aqf "name=${LOCAL_REGISTRY_NAME}")
+
+  if [[ ! -f "${BUILDERDIR}/.bin/pack" ]]; then
+    tools::install "${token}"
+  fi
+  util::tools::path::export "${BUILDERDIR}/.bin"
+
+  name="localhost:5000/${name}"
   image::pull::lifecycle "${name}"
-  tests::run "${name}"
+  tests::run "${name}" "${container_id}" "${skip_cleanup}"
 }
 
 function usage() {
@@ -66,9 +81,10 @@ smoke.sh [OPTIONS]
 Runs the smoke test suite.
 
 OPTIONS
-  --help        -h         prints the command usage
-  --name <name> -n <name>  sets the name of the builder that is built for testing
-  --token <token>          Token used to download assets from GitHub (e.g. jam, pack, etc) (optional)
+  --help          -h         prints the command usage
+  --name <name>   -n <name>  sets the name of the builder that is built for testing
+  --token <token>            token used to download assets from GitHub (e.g. jam, pack, etc) (optional)
+  --skip-cleanup             boolean flag to skip clean up of testing images/registry (default: false) (optional)
 USAGE
 }
 
@@ -81,21 +97,44 @@ function tools::install() {
     --token "${token}"
 }
 
-function builder::create() {
-  local name
-  name="${1}"
+# TODO: when an official pack release comes out that supports multi-arch, use that
+#  Until then, use an experimental pack version we've saved to a shared location
+function experimental::pack::install() {
+  echo "Installing pack experimental"
 
-  util::print::title "Creating builder..."
-  pack builder create "${name}" --config "${BUILDERDIR}/builder.toml"
+  artifact_uri="https://api.github.com/repos/buildpacks/pack/actions/artifacts/1306588326/zip"
+  os=$(util::tools::os)
+  if [[ ${os}  == "linux" ]]; then
+    artifact_uri="https://api.github.com/repos/buildpacks/pack/actions/artifacts/1306592515/zip"
+  fi
+
+  mkdir -p "${BUILDERDIR}/.bin"
+  curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${token}" "${artifact_uri}" \
+    -o "${BUILDERDIR}/.bin/pack.zip"
+  unzip "${BUILDERDIR}/.bin/pack.zip" -d "${BUILDERDIR}/.bin"
+  chmod +x "${BUILDERDIR}/.bin/pack"
+}
+
+function local_registry::cleanup() {
+  local test_image container_id
+  test_image="${1}"
+  container_id="${2}"
+
+  echo "Cleaning up local registry ${container_id}..."
+  docker kill ${container_id}
+
+  echo "Cleaning up test builder ${test_image}..."
+  docker rmi ${test_image}
 }
 
 function image::pull::lifecycle() {
   local name lifecycle_image
   name="${1}"
 
+  # TODO: when a regular pack release is out, revert this to `BUILDERDIR/pack`
   lifecycle_image="index.docker.io/buildpacksio/lifecycle:$(
-    pack builder inspect "${name}" --output json \
-      | jq -r '.local_info.lifecycle.version'
+   "${BUILDERDIR}"/.bin/pack builder inspect "${name}" --output json \
+      | jq -r '.remote_info.lifecycle.version'
   )"
 
   util::print::title "Pulling lifecycle image..."
@@ -103,8 +142,10 @@ function image::pull::lifecycle() {
 }
 
 function tests::run() {
-  local name
+  local name container_id
   name="${1}"
+  container_id="${2}"
+  skip_cleanup="${3}"
 
   util::print::title "Run Builder Smoke Tests"
 
@@ -113,10 +154,17 @@ function tests::run() {
   pushd "${BUILDERDIR}" > /dev/null
     if GOMAXPROCS="${GOMAXPROCS:-4}" go test -count=1 -timeout 0 ./smoke/... -v -run Smoke --name "${name}" | tee "${testout}"; then
       util::tools::tests::checkfocus "${testout}"
+      if ! ${skip_cleanup}; then
+        local_registry::cleanup "${name}" "${container_id}"
+      fi
       util::print::success "** GO Test Succeeded **"
     else
+      if ! ${skip_cleanup}; then
+        local_registry::cleanup "${name}" "${container_id}"
+      fi
       util::print::error "** GO Test Failed **"
     fi
+
   popd > /dev/null
 }
 
