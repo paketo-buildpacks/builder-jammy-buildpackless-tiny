@@ -1,5 +1,15 @@
 description = "Tiny base image (Ubuntu Jammy Jellyfish build image, distroless-like run image) with no buildpacks included. To use, specify buildpacks at build time."
 
+
+# Targets the buildpack will work with
+[[targets]]
+os = "linux"
+arch = "amd64"
+
+[[targets]]
+os = "linux"
+arch = "arm64"
+
 [lifecycle]
   version = "0.19.0"
 
