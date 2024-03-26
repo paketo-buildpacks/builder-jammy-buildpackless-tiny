@@ -10,7 +10,10 @@ concurrency: release
 jobs:
   smoke:
     name: Smoke Test
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ ubuntu-22.04, buildjet-4vcpu-ubuntu-2204-arm ]
     outputs:
       release_notes: ${{ steps.notes.outputs.body }}
     steps:
@@ -27,17 +30,20 @@ jobs:
       run: ./scripts/smoke.sh --name builder --skip-cleanup
 
     - name: Get pack version
+      if: ${{ matrix.runner  == "ubuntu-22.04" }}
       id: pack-version
       run: |
         version=$(jq -r .pack "scripts/.util/tools.json")
         echo "version=${version#v}" >> "$GITHUB_OUTPUT"
 
     - name: Install Global Pack
+      if: ${{ matrix.runner  == "ubuntu-22.04" }}
       uses: buildpacks/github-actions/setup-pack@main
       with:
         pack-version: ${{ steps.pack-version.outputs.version }}
 
     - name: Generate Release Notes
+      if: ${{ matrix.runner  == "ubuntu-22.04" }}
       id: notes
       run: |
         notes="$(pack inspect-builder localhost:5000/builder | grep -v 'Inspecting builder' \
