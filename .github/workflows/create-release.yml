@@ -25,7 +25,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    # TODO: Should we test on multiple architectures?
     - name: Run Smoke Tests
       run: ./scripts/smoke.sh --name builder --skip-cleanup
 
