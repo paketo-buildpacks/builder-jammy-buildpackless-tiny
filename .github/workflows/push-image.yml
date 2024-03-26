@@ -63,9 +63,8 @@ jobs:
         # It cannot be created locally and then pushed
         pack builder create "${DOCKERHUB_ORG}/${registry_repo}:latest" --config builder.toml --publish
 
-        docker pull "${DOCKERHUB_ORG}/${registry_repo}:latest"
-        docker tag "${DOCKERHUB_ORG}/${registry_repo}:latest" "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}"
-        docker push "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}"
+        echo "${PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD}" | sudo skopeo login --username  "${PAKETO_BUILDPACKS_DOCKERHUB_USERNAME}" --password-stdin index.docker.io
+        skopeo copy "docker://${DOCKERHUB_ORG}/${registry_repo}:latest" "docker://${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}"
 
   failure:
     name: Alert on Failure
