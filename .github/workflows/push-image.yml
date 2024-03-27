@@ -64,7 +64,7 @@ jobs:
         pack builder create "${DOCKERHUB_ORG}/${registry_repo}:latest" --config builder.toml --publish
 
         echo "${PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD}" | sudo skopeo login --username  "${PAKETO_BUILDPACKS_DOCKERHUB_USERNAME}" --password-stdin index.docker.io
-        skopeo copy "docker://${DOCKERHUB_ORG}/${registry_repo}:latest" "docker://${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}"
+        skopeo copy --multi-arch all "docker://${DOCKERHUB_ORG}/${registry_repo}:latest" "docker://${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}"
 
   failure:
     name: Alert on Failure
