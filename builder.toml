@@ -8,3 +8,11 @@ description = "Tiny base image (Ubuntu Jammy Jellyfish build image, distroless-l
   id = "io.buildpacks.stacks.jammy.tiny"
   run-image = "index.docker.io/paketobuildpacks/run-jammy-tiny:latest"
   run-image-mirrors = []
+
+[[targets]]
+os = "linux"
+arch = "amd64"
+
+[[targets]]
+os = "linux"
+arch = "arm64"

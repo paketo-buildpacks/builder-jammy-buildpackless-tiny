@@ -1,0 +1,6 @@
+[general]
+
+#### Address & Root dir
+port = 8080
+root = "./web"
+
