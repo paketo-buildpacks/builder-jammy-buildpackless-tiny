@@ -61,10 +61,10 @@ jobs:
 
         # In order to publish multi-arch builders with pack, the builder MUST be published.
         # It cannot be created locally and then pushed
-        pack builder create "${DOCKERHUB_ORG}/${registry_repo}:latest" --config builder.toml --publish
+        pack builder create "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" --config builder.toml --publish
 
         echo "${PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD}" | sudo skopeo login --username  "${PAKETO_BUILDPACKS_DOCKERHUB_USERNAME}" --password-stdin index.docker.io
-        skopeo copy --multi-arch all "docker://${DOCKERHUB_ORG}/${registry_repo}:latest" "docker://${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}"
+        skopeo copy --multi-arch all "docker://${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" "docker://${DOCKERHUB_ORG}/${registry_repo}:latest"
 
   failure:
     name: Alert on Failure
