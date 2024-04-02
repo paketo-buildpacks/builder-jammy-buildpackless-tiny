@@ -1,7 +1,7 @@
 description = "Tiny base image (Ubuntu Jammy Jellyfish build image, distroless-like run image) with no buildpacks included. To use, specify buildpacks at build time."
 
 [lifecycle]
-  version = "0.19.0"
+  version = "0.19.1"
 
 [stack]
   build-image = "docker.io/paketobuildpacks/build-jammy-tiny:0.2.32"
