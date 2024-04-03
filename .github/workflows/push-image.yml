@@ -37,7 +37,7 @@ jobs:
         mkdir -p "${HOME}"/bin
         echo "${HOME}/bin" >> "${GITHUB_PATH}"
 
-        cp "${HOME}/experimental-pack-binaries/pack-amd64-linux" ${HOME}/bin/pack
+        cp "experimental-pack-binaries/pack-amd64-linux" ${HOME}/bin/pack
         ${HOME}/bin/pack version
 
     - name: Enable Experimental Pack Features
