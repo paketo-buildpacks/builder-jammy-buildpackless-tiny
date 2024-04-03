@@ -36,7 +36,7 @@ jobs:
         echo "version=${version#v}" >> "$GITHUB_OUTPUT"
 
     - name: Install Global Pack
-      if: ${{ matrix.runner  == "ubuntu-22.04" }}
+      if: matrix.runner == 'ubuntu-22.04'
       uses: buildpacks/github-actions/setup-pack@main
       with:
         pack-version: ${{ steps.pack-version.outputs.version }}
