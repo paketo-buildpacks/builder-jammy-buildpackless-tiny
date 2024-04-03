@@ -6,10 +6,13 @@ on:
     - main
 
 jobs:
-
   smoke:
-    name: Smoke Test
-    runs-on: ubuntu-22.04
+    name: Architecture-Specific Smoke Test
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ ubuntu-22.04, buildjet-4vcpu-ubuntu-2204-arm ]
+
     steps:
     - name: Setup Go
       uses: actions/setup-go@v3
@@ -21,6 +24,23 @@ jobs:
 
     - name: Run Smoke Tests
       run: ./scripts/smoke.sh
+
+
+  roundup:
+    name: Smoke Test
+    if: ${{ always() }}
+    runs-on: ubuntu-22.04
+    needs: smoke
+    steps:
+    - run: |
+        result="${{ needs.smoke.result }}"
+        if [[ $result == "success" ]]; then
+          echo "Smoke tests passed against all builders"
+          exit 0
+        else
+          echo "Smoke tests failed on one or more builders"
+          exit 1
+        fi
 
   upload:
     name: Upload Workflow Event Payload

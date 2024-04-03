@@ -25,10 +25,20 @@ jobs:
         version=$(jq -r .pack "scripts/.util/tools.json")
         echo "version=${version#v}" >> "$GITHUB_OUTPUT"
 
-    - name: Install Global Pack
-      uses: buildpacks/github-actions/setup-pack@main
-      with:
-        pack-version: ${{ steps.pack-version.outputs.version }}
+    # TODO: when an official pack release comes out that supports multi-arch, use that
+    #  Until then, use an experimental pack version we've saved to a shared location
+    - name: Install pack
+      run: |
+        #!/usr/bin/env bash
+
+        set -euo pipefail
+        echo "Installing pack experimental"
+
+        mkdir -p "${HOME}"/bin
+        echo "${HOME}/bin" >> "${GITHUB_PATH}"
+
+        cp "${HOME}/experimental-pack-binaries/pack-amd64-linux" ${HOME}/bin/pack
+        ${HOME}/bin/pack version
 
     - name: Enable Experimental Pack Features
       run: |
@@ -36,11 +46,7 @@ jobs:
           pack config experimental true
         fi
 
-    - name: Create Builder Image
-      run: |
-        pack builder create builder --config builder.toml
-
-    - name: Push To Dockerhub
+    - name: Create Builder Image and Push To Dockerhub
       env:
         PAKETO_BUILDPACKS_DOCKERHUB_USERNAME: ${{ secrets.PAKETO_BUILDPACKS_DOCKERHUB_USERNAME }}
         PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD: ${{ secrets.PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD }}
@@ -52,11 +58,13 @@ jobs:
         registry_repo=$(echo "${{ github.repository }}" | sed 's/^.*\///')
 
         echo "${PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD}" | docker login --username "${PAKETO_BUILDPACKS_DOCKERHUB_USERNAME}" --password-stdin
-        docker tag builder "${DOCKERHUB_ORG}/${registry_repo}:latest"
-        docker tag builder "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}"
 
-        docker push "${DOCKERHUB_ORG}/${registry_repo}:latest"
-        docker push "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}"
+        # In order to publish multi-arch builders with pack, the builder MUST be published.
+        # It cannot be created locally and then pushed
+        pack builder create "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" --config builder.toml --publish
+
+        echo "${PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD}" | sudo skopeo login --username  "${PAKETO_BUILDPACKS_DOCKERHUB_USERNAME}" --password-stdin index.docker.io
+        skopeo copy --multi-arch all "docker://${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" "docker://${DOCKERHUB_ORG}/${registry_repo}:latest"
 
   failure:
     name: Alert on Failure
