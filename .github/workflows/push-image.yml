@@ -37,8 +37,8 @@ jobs:
         mkdir -p "${HOME}"/bin
         echo "${HOME}/bin" >> "${GITHUB_PATH}"
 
-        curl -L "https://ent.box.com/shared/static/j4d1bfe9uk1sb0i7zjvci0md9xmy41u4" -o ${HOME}/bin/pack
-        chmod +x ${HOME}/bin/pack
+        cp "${HOME}/experimental-pack-binaries/pack-amd64-linux" ${HOME}/bin/pack
+        ${HOME}/bin/pack version
 
     - name: Enable Experimental Pack Features
       run: |

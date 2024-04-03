@@ -51,8 +51,9 @@ function main() {
 
   # tools::install "${token}"
   if [[ ! -f "${BUILDERDIR}/.bin/pack" ]]; then
-    experimental::pack::install "${token}"
+    experimental::pack::install
   fi
+
 
   # Do not rebuild the builder if it already exists on the local registry
   if [[  -z $(docker ps -aqf "name=${LOCAL_REGISTRY_NAME}") ]]; then
@@ -93,42 +94,22 @@ function tools::install() {
 }
 
 # TODO: when an official pack release comes out that supports multi-arch, use that
-#  Until then, use an experimental pack version we've saved to a shared location
+#  Until then, use an experimental pack version we've saved in experimental-pack-binaries temporarily
 function experimental::pack::install() {
   echo "Installing pack experimental"
 
-  local artifact_uri
   os=$(util::tools::os)
   arch=$(util::tools::arch)
   mkdir -p "${BUILDERDIR}/.bin"
+  binary_dir="${BUILDERDIR}/experimental-pack-binaries"
 
-  if [[ ${arch}  == "amd64" ]]; then
-    if [[ ${os}  == "linux" ]]; then
-      # linux + amd64
-      artifact_uri="https://api.github.com/repos/buildpacks/pack/actions/artifacts/1306592515/zip"
-    elif [[ ${os}  == "darwin" ]]; then
-      # darwin + amd64
-      artifact_uri="https://api.github.com/repos/buildpacks/pack/actions/artifacts/1306588326/zip"
-    fi
-
-    curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${token}" "${artifact_uri}" \
-      -o "${BUILDERDIR}/.bin/pack.zip"
-    unzip "${BUILDERDIR}/.bin/pack.zip" -d "${BUILDERDIR}/.bin"
-
-  elif [[ ${arch}  == "arm64" ]]; then
-    pushd /tmp
-      git clone https://${token}@github.com/buildpacks/pack.git
-      cd pack
-      git fetch origin pull/2086/head:pr-2086
-      git checkout pr-2086
-      PACK_VERSION=2086-anthony GOARCH=arm64 GOOS=linux make build
-      cp out/pack "${BUILDERDIR}/.bin/pack"
-      cd -
-    popd
+  if ! test -f "${binary_dir}/pack-${arch}-${os}"; then
+    echo "An experimental pack binary for ${arch} ${os} is not available."
+    exit 1
   fi
 
-  chmod +x "${BUILDERDIR}/.bin/pack"
-  echo $PATH
+  cp "${binary_dir}/pack-${arch}-${os}" "${BUILDERDIR}/.bin/pack"
+  "${BUILDERDIR}/.bin/pack" version
 }
 
 function local_registry::run() {
