@@ -40,6 +40,16 @@ jobs:
         cp "experimental-pack-binaries/pack-amd64-linux" ${HOME}/bin/pack
         ${HOME}/bin/pack version
 
+    - name: Install crane
+      run: |
+        VERSION=$(curl -s "https://api.github.com/repos/google/go-containerregistry/releases/latest" | jq -r '.tag_name')
+        OS=Linux
+        ARCH=x86_64
+        curl -sL "https://github.com/google/go-containerregistry/releases/download/${VERSION}/go-containerregistry_${OS}_${ARCH}.tar.gz" > go-containerregistry.tar.gz
+
+        tar -zxvf go-containerregistry.tar.gz -C "${HOME}/bin" crane
+        chmod +x "${HOME}/bin/crane"
+
     - name: Enable Experimental Pack Features
       run: |
         if [ -f "scripts/options.json" ] && jq -e -r .pack_config_enable_experimental "scripts/options.json" > /dev/null; then
@@ -62,9 +72,7 @@ jobs:
         # In order to publish multi-arch builders with pack, the builder MUST be published.
         # It cannot be created locally and then pushed
         pack builder create "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" --config builder.toml --publish
-
-        echo "${PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD}" | sudo skopeo login --username  "${PAKETO_BUILDPACKS_DOCKERHUB_USERNAME}" --password-stdin index.docker.io
-        skopeo copy --multi-arch all "docker://${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" "docker://${DOCKERHUB_ORG}/${registry_repo}:latest"
+        crane copy "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" "${DOCKERHUB_ORG}/${registry_repo}:latest"
 
   failure:
     name: Alert on Failure
