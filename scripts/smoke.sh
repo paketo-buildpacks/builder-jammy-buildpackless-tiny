@@ -97,24 +97,6 @@ function tools::install() {
     --token "${token}"
 }
 
-# TODO: when an official pack release comes out that supports multi-arch, use that
-#  Until then, use an experimental pack version we've saved to a shared location
-function experimental::pack::install() {
-  echo "Installing pack experimental"
-
-  artifact_uri="https://api.github.com/repos/buildpacks/pack/actions/artifacts/1306588326/zip"
-  os=$(util::tools::os)
-  if [[ ${os}  == "linux" ]]; then
-    artifact_uri="https://api.github.com/repos/buildpacks/pack/actions/artifacts/1306592515/zip"
-  fi
-
-  mkdir -p "${BUILDERDIR}/.bin"
-  curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${token}" "${artifact_uri}" \
-    -o "${BUILDERDIR}/.bin/pack.zip"
-  unzip "${BUILDERDIR}/.bin/pack.zip" -d "${BUILDERDIR}/.bin"
-  chmod +x "${BUILDERDIR}/.bin/pack"
-}
-
 function local_registry::cleanup() {
   local test_image container_id
   test_image="${1}"
