@@ -43,7 +43,7 @@ jobs:
         pack-version: ${{ steps.pack-version.outputs.version }}
 
     - name: Generate Release Notes
-      if: ${{ matrix.runner  == "ubuntu-22.04" }}
+      if: matrix.runner == 'ubuntu-22.04'
       id: notes
       run: |
         notes="$(pack inspect-builder localhost:5000/builder | grep -v 'Inspecting builder' \
