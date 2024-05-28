@@ -113,7 +113,6 @@ function image::pull::lifecycle() {
   local name lifecycle_image
   name="${1}"
 
-  # TODO: when a regular pack release is out, revert this to `BUILDERDIR/pack`
   lifecycle_image="index.docker.io/buildpacksio/lifecycle:$(
    "${BUILDERDIR}"/.bin/pack builder inspect "${name}" --output json \
       | jq -r '.remote_info.lifecycle.version'

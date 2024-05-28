@@ -49,11 +49,7 @@ function main() {
     name="testbuilder"
   fi
 
-  # tools::install "${token}"
-  if [[ ! -f "${BUILDERDIR}/.bin/pack" ]]; then
-    experimental::pack::install
-  fi
-
+  tools::install "${token}"
 
   # Do not rebuild the builder if it already exists on the local registry
   if [[  -z $(docker ps -aqf "name=${LOCAL_REGISTRY_NAME}") ]]; then
@@ -93,25 +89,6 @@ function tools::install() {
     --token "${token}"
 }
 
-# TODO: when an official pack release comes out that supports multi-arch, use that
-#  Until then, use an experimental pack version we've saved in experimental-pack-binaries temporarily
-function experimental::pack::install() {
-  echo "Installing pack experimental"
-
-  os=$(util::tools::os)
-  arch=$(util::tools::arch)
-  mkdir -p "${BUILDERDIR}/.bin"
-  binary_dir="${BUILDERDIR}/experimental-pack-binaries"
-
-  if ! test -f "${binary_dir}/pack-${arch}-${os}"; then
-    echo "An experimental pack binary for ${arch} ${os} is not available."
-    exit 1
-  fi
-
-  cp "${binary_dir}/pack-${arch}-${os}" "${BUILDERDIR}/.bin/pack"
-  "${BUILDERDIR}/.bin/pack" version
-}
-
 function local_registry::run() {
   docker run --rm -d -p 5000:5000 --name "builder_test_registry" "registry:2.7"
 }
@@ -121,8 +98,7 @@ function builder::create() {
   name="${1}"
 
   util::print::title "Creating builder..."
-  # TODO: when a regular pack release is out, revert this to `pack`
-  "${BUILDERDIR}"/.bin/pack builder create "${name}" --config "${BUILDERDIR}/builder.toml" --publish
+  pack builder create "${name}" --config "${BUILDERDIR}/builder.toml" --publish
 }
 
 main "${@:-}"

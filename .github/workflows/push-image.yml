@@ -25,20 +25,10 @@ jobs:
         version=$(jq -r .pack "scripts/.util/tools.json")
         echo "version=${version#v}" >> "$GITHUB_OUTPUT"
 
-    # TODO: when an official pack release comes out that supports multi-arch, use that
-    #  Until then, use an experimental pack version we've saved to a shared location
-    - name: Install pack
-      run: |
-        #!/usr/bin/env bash
-
-        set -euo pipefail
-        echo "Installing pack experimental"
-
-        mkdir -p "${HOME}"/bin
-        echo "${HOME}/bin" >> "${GITHUB_PATH}"
-
-        cp "experimental-pack-binaries/pack-amd64-linux" ${HOME}/bin/pack
-        ${HOME}/bin/pack version
+    - name: Install Global Pack
+      uses: buildpacks/github-actions/setup-pack@main
+      with:
+        pack-version: ${{ steps.pack-version.outputs.version }}
 
     - name: Install crane
       run: |
