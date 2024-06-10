@@ -2,7 +2,7 @@ module github.com/paketo-buildpacks/builder-jammy-buildpackless-tiny
 
 go 1.21
 
-toolchain go1.21.0
+toolchain go1.22.4
 
 require (
 	github.com/onsi/gomega v1.33.1
