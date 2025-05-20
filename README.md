@@ -11,7 +11,7 @@ time using whatever mechanisms your CNB platform of choice offers.
 For example, with the `pack` CLI, use `--buildpack` as follows:
 ```
 pack build go-with-buildpackless-builder \
-           --buildpack gcr.io/paketo-buildpacks/go \
+           --buildpack index.docker.io/paketobuildpacks/go \
            --builder paketobuildpacks/builder-jammy-buildpackless-tiny:latest
 ```
 
