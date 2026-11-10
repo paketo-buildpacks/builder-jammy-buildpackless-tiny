@@ -1,17 +1,17 @@
-description = "Tiny base image (Ubuntu Jammy Jellyfish build image, distroless-like run image) with no buildpacks included. To use, specify buildpacks at build time."
+description = 'Tiny base image (Ubuntu Jammy Jellyfish build image, distroless-like run image) with no buildpacks included. To use, specify buildpacks at build time.'
 
 [lifecycle]
-  version = "0.21.28"
+version = '0.21.28'
 
 [stack]
-  build-image = "docker.io/paketobuildpacks/build-jammy-tiny:0.2.198"
-  id = "io.buildpacks.stacks.jammy.tiny"
-  run-image = "index.docker.io/paketobuildpacks/run-jammy-tiny:latest"
+id = 'io.buildpacks.stacks.jammy.tiny'
+build-image = 'docker.io/paketobuildpacks/build-jammy-tiny:0.2.198'
+run-image = 'index.docker.io/paketobuildpacks/run-jammy-tiny:latest'
 
 [[targets]]
-  arch = "amd64"
-  os = "linux"
+os = 'linux'
+arch = 'amd64'
 
 [[targets]]
-  arch = "arm64"
-  os = "linux"
+os = 'linux'
+arch = 'arm64'
