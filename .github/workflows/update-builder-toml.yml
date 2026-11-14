@@ -95,13 +95,6 @@ jobs:
         branch: "automation/builder-toml-update"
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Rebase branch
-      uses: pacostas/github-config/actions/pull-request/rebase-branch@rebase-functionality
-      with:
-        branch: "main"
-        keyid: ${{ secrets.PAKETO_BOT_GPG_SIGNING_KEY_ID }}
-        key: ${{ secrets.PAKETO_BOT_GPG_SIGNING_KEY }}
-
     - name: Update builder.toml
       uses: paketo-buildpacks/github-config/actions/builder/update@main
       with:
